@@ -1,4 +1,6 @@
-﻿using System;
+﻿using MessagePack;
+using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -14,18 +16,30 @@ namespace IBLT
     // https://arxiv.org/pdf/1101.2245.pdf
     // https://medium.com/codechain/invertible-bloom-lookup-table-37600927cfbe
 
-
-    public class FaultTolerantIBLT
+    [Serializable]
+    [MessagePackObject]
+    public partial class FaultTolerantIBLT
     {
         private const int salt = 127;
 
+        [JsonProperty("k")]
+        [Key(0)]
         protected int k;
-        private Func<int, int>[] hashFunctions;
 
-        private int M = 128;
-        private Cell[] cells;
+        [IgnoreMember]
+        private Func<BigInteger, BigInteger>[] hashFunctions;
 
+        [JsonProperty("M")]
+        [Key(1)]
+        private int M;
+        
+        [JsonProperty("t")]
+        [Key(2)]
         public int totalCount;
+
+        [JsonProperty("c")]
+        [Key(3)]
+        private Cell[] cells;
 
         public FaultTolerantIBLT Clone()
         {
@@ -41,11 +55,15 @@ namespace IBLT
             return iblt;
         }
 
+        public FaultTolerantIBLT() { }
+
         /// <param name="duplicateTolerance">MinValue = 1</param>
         public FaultTolerantIBLT(int hashFunctions, int M = 128)
         {
             this.k = hashFunctions;
-            this.hashFunctions = Enumerable.Range(1, hashFunctions + 1).Select<int, Func<int, int>>(h => (x) => GenerateHashFunction(x, h)).ToArray();
+            this.hashFunctions = Enumerable.Range(1, hashFunctions + 1).Select<int, Func<BigInteger, BigInteger>>(h => (x) => GenerateHashFunction(x, h)).ToArray();
+
+            this.M = M;
 
             // cell count is m/k. 
             var cellcount = M / k;
@@ -59,7 +77,7 @@ namespace IBLT
             return Math.Pow(1 - p0, this.k);
         }
 
-        public void Insert(int key, BigInteger value)
+        public void Insert(BigInteger key, BigInteger value)
         {
             totalCount++;
 
@@ -67,7 +85,7 @@ namespace IBLT
 
             foreach (var hash in this.hashFunctions)
             {
-                var index = hash(key) % this.cells.Length;
+                var index = (int) (hash(key) % this.cells.Length);
 
                 this.cells[index].Count++;
                 this.cells[index].KeySum += key;
@@ -76,7 +94,7 @@ namespace IBLT
             }
         }
 
-        public void Delete(int key, BigInteger value)
+        public void Delete(BigInteger key, BigInteger value)
         {
             totalCount--;
             
@@ -84,7 +102,7 @@ namespace IBLT
 
             foreach (var hash in this.hashFunctions)
             {
-                var index = hash(key) % this.cells.Length;
+                var index = (int) (hash(key) % this.cells.Length);
 
                 this.cells[index].Count--;
                 this.cells[index].KeySum -= key;
@@ -97,13 +115,13 @@ namespace IBLT
         /// Returns null if IBLT is empty, 
         /// throws if something can't be found (it could be because we are over capacity or because it wasn't added in the first place)
         /// </summary>
-        public BigInteger? Get(int key, int duplicateTolerance = 5)
+        public BigInteger? Get(BigInteger key, int duplicateTolerance = 5)
         {
             var g1 = KeyHash(key);
 
             foreach (var hash in hashFunctions)
             {
-                var index = hash(key) % this.cells.Length;
+                var index = (int)(hash(key) % this.cells.Length);
                 var cell = this.cells[index];
 
                 if (cell.Count == 0 && cell.KeySum == 0 && cell.HashKeySum == 0)
@@ -130,6 +148,8 @@ namespace IBLT
 
         public void Add(FaultTolerantIBLT other)
         {
+            this.totalCount += other.totalCount;
+
             for (int i = 0; i < this.cells.Length; i++)
             {
                 this.cells[i].Count += other.cells[i].Count;
@@ -142,6 +162,8 @@ namespace IBLT
 
         public void Substract(FaultTolerantIBLT other)
         {
+            this.totalCount -= other.totalCount;
+
             for (int i = 0; i < this.cells.Length; i++)
             {
                 this.cells[i].Count -= other.cells[i].Count;
@@ -155,12 +177,12 @@ namespace IBLT
         /// <summary>
         /// This destroys the IBLT, copy it if you want to save it. 
         /// </summary>
-        public bool TryGetAllItems(out (int, BigInteger)[] output, out (int, BigInteger)[] extraneousDeletes, int duplicateTolerance = 1)
+        public bool TryGetAllItems(out (BigInteger, BigInteger)[] output, out (BigInteger, BigInteger)[] extraneousDeletes, int duplicateTolerance = 1)
         {
-            var outputList = new List<(int, BigInteger)>();
-            var deleteList = new List<(int, BigInteger)>();
+            var outputList = new List<(BigInteger, BigInteger)>();
+            var deleteList = new List<(BigInteger, BigInteger)>();
 
-            var addRemoveLoopDetector = new HashSet<int>();
+            var addRemoveLoopDetector = new HashSet<BigInteger>();
 
             bool Handle_N_OccuranceOfAKey(int n)
             {
@@ -233,7 +255,7 @@ namespace IBLT
             return false; 
         }
 
-        static int GenerateHashFunction(int x, int hashIndex)
+        static BigInteger GenerateHashFunction(BigInteger x, int hashIndex)
         {
             x += salt;
 
@@ -250,28 +272,35 @@ namespace IBLT
             return x;
         }
 
-        static int KeyHash(int x)
+        static BigInteger KeyHash(BigInteger x)
         { 
             // This is the G1(x) from the paper, needs to be uniform, for now trying this out with -1 index.
             // Have not tested whether this hash function is sufficiently random. 
             return GenerateHashFunction(x, -1);
         }
 
+        [MessagePackObject]
+        [Serializable]
         [DebuggerDisplay("Count = {Count}, KeySum = {KeySum}, ValueSum = {ValueSum}")]
-        class Cell
+        public class Cell
         {
+            [JsonProperty("C")]
+            [Key(0)]
             public int Count { get; set; }
 
-            public int KeySum { get; set; }
+            [JsonProperty("K")]
+            [Key(1)]
+            public BigInteger KeySum { get; set; }
 
+            [JsonProperty("V")]
+            [Key(2)]
             public BigInteger ValueSum { get; set; }
 
 
             // Duplicate Deletes 
-            public long HashKeySum { get; set; }
-
-            //Duplicate entries (key value same)
-            public long HashValueSum { get; set; }
+            [JsonProperty("H")]
+            [Key(3)]
+            public BigInteger HashKeySum { get; set; }
 
             public Cell Clone()
             {
@@ -281,7 +310,6 @@ namespace IBLT
                     KeySum = this.KeySum,
                     ValueSum = this.ValueSum,
                     HashKeySum = this.HashKeySum,
-                    HashValueSum = this.HashValueSum
                 };
             }
         }
