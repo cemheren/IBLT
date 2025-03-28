@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.13.35913.81 d17.13
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IBLT", "IBLT.csproj", "{B4318A7B-284C-485D-89BD-02F4D5902E1F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tests", "..\Tests\Tests.csproj", "{BB32D948-EB33-4FE9-9F70-4A4A5AC21560}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{B4318A7B-284C-485D-89BD-02F4D5902E1F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B4318A7B-284C-485D-89BD-02F4D5902E1F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B4318A7B-284C-485D-89BD-02F4D5902E1F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B4318A7B-284C-485D-89BD-02F4D5902E1F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BB32D948-EB33-4FE9-9F70-4A4A5AC21560}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BB32D948-EB33-4FE9-9F70-4A4A5AC21560}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BB32D948-EB33-4FE9-9F70-4A4A5AC21560}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BB32D948-EB33-4FE9-9F70-4A4A5AC21560}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {EBF20FEE-117E-474E-B160-9CB9835B4095}
+	EndGlobalSection
+EndGlobal

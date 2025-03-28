@@ -22,12 +22,13 @@ namespace IBLT
 
         public int totalCount;
 
-        public InvertibleBloomLookupTable(int hashFunctions)
+        public InvertibleBloomLookupTable(int hashFunctions, int M = 128)
         {
             this.k = hashFunctions;
             this.hashFunctions = Enumerable.Range(0, hashFunctions).Select<int, Func<int, int>>(h => (x) => GenerateHashFunction(x, h)).ToArray();
 
-            // cell count is m/k. 
+            this.M = M;
+
             var cellcount = M / k;
             this.cells = Enumerable.Range(0, cellcount).Select(c => new Cell()).ToArray();
         }

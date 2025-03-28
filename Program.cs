@@ -1,4 +1,5 @@
 ﻿using System.Net;
+using System.Numerics;
 using System.Runtime.InteropServices;
 using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
@@ -9,6 +10,12 @@ using IBLT;
 using Newtonsoft.Json;
 
 //var summary = BenchmarkRunner.Run<EnumerableBenchmark>();
+
+
+var bigInteger = new BigInteger(Encoding.UTF8.GetBytes("some string"));
+var str = Encoding.UTF8.GetString(bigInteger.ToByteArray());
+
+
 
 var hashCount = 4;
 var cells = 8;
