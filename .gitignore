@@ -5,3 +5,8 @@
 /.vs/IBLT
 /bin/Debug
 /obj
+/Tests/bin/Debug/net8.0
+/Tests/obj
+/.vs/ProjectEvaluation
+/IBLT/bin/Debug/net8.0
+/IBLT/obj
