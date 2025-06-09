@@ -94,7 +94,7 @@ namespace Tests
 
             for (int i = 0; i < totalIntegers; i++)
             {
-                var value = Encoding.UTF8.GetBytes($"This is a string representing {i}th number");
+                var value = Encoding.UTF8.GetBytes($"This is a string representing {i}th number"); // This could be the unique identifier at a scope, so don't need sub ID if we know we are grouping for a sub. 40 chars in this string. 
 
                 iblt.Insert(i, new  BigInteger(value));
 
