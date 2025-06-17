@@ -7,6 +7,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tests", "Tests\Tests.csproj
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IBLT", "IBLT\IBLT.csproj", "{6FA06570-B749-3A4C-8F4F-E7BEB8FB7A3B}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChecksumCosmosClient", "ChecksumCosmosClient\ChecksumCosmosClient.csproj", "{4CFD9F8D-076E-4933-886B-0C273A42B64F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestConsoleApp", "TestConsoleApp\TestConsoleApp.csproj", "{D03D004D-CA3B-42BB-9C0D-2C11AAAABDE5}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +25,14 @@ Global
 		{6FA06570-B749-3A4C-8F4F-E7BEB8FB7A3B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6FA06570-B749-3A4C-8F4F-E7BEB8FB7A3B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6FA06570-B749-3A4C-8F4F-E7BEB8FB7A3B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4CFD9F8D-076E-4933-886B-0C273A42B64F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4CFD9F8D-076E-4933-886B-0C273A42B64F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4CFD9F8D-076E-4933-886B-0C273A42B64F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4CFD9F8D-076E-4933-886B-0C273A42B64F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D03D004D-CA3B-42BB-9C0D-2C11AAAABDE5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D03D004D-CA3B-42BB-9C0D-2C11AAAABDE5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D03D004D-CA3B-42BB-9C0D-2C11AAAABDE5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D03D004D-CA3B-42BB-9C0D-2C11AAAABDE5}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

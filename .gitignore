@@ -5,8 +5,12 @@
 /.vs/IBLT
 /bin/Debug
 /obj
-/Tests/bin/Debug/net8.0
+/Tests/bin/*
 /Tests/obj
+/TestConsoleApp/bin/*
+/TestConsoleApp/obj
 /.vs/ProjectEvaluation
-/IBLT/bin/Debug/net8.0
+/IBLT/bin/*
+/ChecksumCosmosClient/bin/*
+/ChecksumCosmosClient/obj/*
 /IBLT/obj

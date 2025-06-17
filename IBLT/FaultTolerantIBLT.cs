@@ -70,6 +70,12 @@ namespace IBLT
             this.cells = Enumerable.Range(0, cellcount).Select(c => new Cell()).ToArray();
         }
 
+        public void Clean()
+        {
+            var cellcount = this.M / this.k;
+            this.cells = Enumerable.Range(0, cellcount).Select(c => new Cell()).ToArray();
+        }
+
         public double GetApproximateNotFoundProbability()
         {
             var p0 = Math.Exp(-this.k * this.totalCount / (double)this.M);
