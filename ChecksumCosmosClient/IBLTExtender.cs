@@ -17,7 +17,7 @@
 
     public record IBLTRecord(string id, string partitionKey, byte[] data) : PartitionedRecord(id, partitionKey);
 
-    public class IBLTExtender<T> where T : PartitionedRecord
+    public class IBLTExtender<T> where T : PartitionedRecord, new()
     {
         private readonly ExtendedCosmosClient<T> cosmosClient;
         private ExtendedCosmosClient<IBLTRecord> IBLTCosmosClient;
@@ -84,7 +84,7 @@
             return allResources;
         }
 
-        public async Task<T[]> GetDiff(T[] items, string partitionKey)
+        public async Task<T[]?> GetDiff(T[] items, string partitionKey)
         {
             var iblt = new FaultTolerantIBLT(4, 128);
             foreach (var item in items)
@@ -98,6 +98,9 @@
             ibltback.Substract(iblt);
 
             var diffList = ibltback.ListStrings();
+
+            return diffList?.Select(item =>
+                new T { id = item.Item1, partitionKey = partitionKey }).ToArray();
         }
     }
 }
