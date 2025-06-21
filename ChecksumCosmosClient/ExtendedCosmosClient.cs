@@ -1,5 +1,6 @@
 ﻿namespace ChecksumCosmosClient
 {
+    using Azure;
     using Azure.Identity;
     using Microsoft.Azure.Cosmos;
 
@@ -31,7 +32,7 @@
             this.list.Add(newResolver);
         }
 
-        public string Resolve(string partitionKey = default)
+        public string Resolve(string? partitionKey = default)
         {
             var r = this.list[0](null, partitionKey);
             foreach (var resolver in this.list[1 ..])
@@ -43,12 +44,14 @@
         }
     }
 
-    public class ExtendedCosmosClient<T> where T : PartitionedRecord
+    public class ExtendedCosmosClient<T> : IIncrementalCosmosClient<T> where T : PartitionedRecord
     {
-        public readonly CosmosClient cosmosClient;
+        private CosmosClient cosmosClient;
 
         public NameResolver DatabaseResolver = new NameResolver(() => "test_db");
         public NameResolver ContainerResolver = new NameResolver(() => "test_container");
+
+        public CosmosClient CosmosClient => cosmosClient;
 
         public ExtendedCosmosClient(CosmosClient cosmosClient)
         {
@@ -66,6 +69,8 @@
                 item: item,
                 partitionKey: new PartitionKey(item.partitionKey)
             );
+
+            Console.WriteLine($"ExtendedCosmosClient:UpsertItemAsync: {response.RequestCharge} RU");
         }
 
         public async Task<T?> ReadItemAsync(string partitionKey, string id)
@@ -82,6 +87,8 @@
                     partitionKey: new PartitionKey(partitionKey)
                 );
 
+                Console.WriteLine($"ExtendedCosmosClient:ReadItemAsync: {response.RequestCharge} RU");
+
                 return response.Resource;
             }
             catch (CosmosException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
@@ -92,6 +99,8 @@
 
         public async Task<T[]> GetAllResources(string partitionKey)
         {
+            var totalRUs = 0.0;
+
             var container = this
                 .cosmosClient
                 .GetDatabase(DatabaseResolver.Resolve(partitionKey))
@@ -110,13 +119,27 @@
             while (feed.HasMoreResults)
             {
                 FeedResponse<T> response = await feed.ReadNextAsync();
+
+                totalRUs += response.Diagnostics.GetQueryMetrics().TotalRequestCharge;
+
                 foreach (var item in response)
                 {
                     items.Add(item);
                 }
             }
 
+            Console.WriteLine($"ExtendedCosmosClient:GetAllResources: {totalRUs} RU, returned {items.Count} items");
+
             return items.ToArray();
+        }
+
+        public async Task<T[]?> GetDiff(T[] items, string partitionKey)
+        {
+            var allDBItems = await this.GetAllResources(partitionKey);
+
+            var itemsHash = items.ToDictionary(i => i.id, i => i);
+
+            return allDBItems.Where(i => itemsHash.ContainsKey(i.id) == false).ToArray();
         }
     }
 }

@@ -9,27 +9,32 @@
 
     public static class CosmosIBLTExtensions
     {
-        public static ExtendedCosmosClient<T> WithIBLTExtension<T>(this ExtendedCosmosClient<T> cosmosClient) where T : PartitionedRecord
+        public static IIncrementalCosmosClient<T> WithIBLTExtension<T>(this IIncrementalCosmosClient<T> cosmosClient) where T : PartitionedRecord, new()
         {
-            return cosmosClient;
+            return new CosmosClientWithIBLT<T>(cosmosClient);
         }
     }
 
-    public record IBLTRecord(string id, string partitionKey, byte[] data) : PartitionedRecord(id, partitionKey);
-
-    public class IBLTExtender<T> where T : PartitionedRecord, new()
+    public class IBLTRecord(string id, string partitionKey, byte[] data) : PartitionedRecord(id, partitionKey)
     {
-        private readonly ExtendedCosmosClient<T> cosmosClient;
+        public byte[] Data { get; } = data;
+    }
+
+    public class CosmosClientWithIBLT<T> : IIncrementalCosmosClient<T> where T : PartitionedRecord, new()
+    {
+        private readonly IIncrementalCosmosClient<T> cosmosClient;
         private ExtendedCosmosClient<IBLTRecord> IBLTCosmosClient;
 
         const string databaseName = "test_db";
         const string containerName = "test_iblt_container";
 
-        public IBLTExtender(ExtendedCosmosClient<T> cosmosClient)
+        public CosmosClient CosmosClient => this.cosmosClient.CosmosClient;
+
+        public CosmosClientWithIBLT(IIncrementalCosmosClient<T> cosmosClient)
         {
             this.cosmosClient = cosmosClient;
 
-            this.IBLTCosmosClient = new ExtendedCosmosClient<IBLTRecord>(cosmosClient.cosmosClient);
+            this.IBLTCosmosClient = new ExtendedCosmosClient<IBLTRecord>(cosmosClient.CosmosClient);
             this.IBLTCosmosClient.DatabaseResolver.Add((_) => databaseName);
             this.IBLTCosmosClient.ContainerResolver.Add((_) => containerName);
         }
@@ -44,7 +49,7 @@
                 if (readItem == null)
                 {
                     var dbIBLT = await this.IBLTCosmosClient.ReadItemAsync(item.partitionKey, item.partitionKey);
-                    var ibltback = MessagePackSerializer.Deserialize<FaultTolerantIBLT>(dbIBLT?.data);
+                    var ibltback = MessagePackSerializer.Deserialize<FaultTolerantIBLT>(dbIBLT?.Data);
 
                     if (ibltback == null)
                     {
@@ -93,7 +98,7 @@
             }
 
             var dbIBLT = await this.IBLTCosmosClient.ReadItemAsync(partitionKey, partitionKey);
-            var ibltback = MessagePackSerializer.Deserialize<FaultTolerantIBLT>(dbIBLT?.data);
+            var ibltback = MessagePackSerializer.Deserialize<FaultTolerantIBLT>(dbIBLT?.Data);
 
             ibltback.Substract(iblt);
 
