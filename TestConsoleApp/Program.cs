@@ -61,3 +61,7 @@ Console.WriteLine($"Result: diff1:{diff1?.Length}, diff2: {diff2?.Length}");
 ////ExtendedCosmosClient:GetAllResources: 7.87 RU, returned 100 items
 ////ExtendedCosmosClient:ReadItemAsync: 1.05 RU
 ////Result: diff1:2, diff2: 2
+////=========== Test Diff RU difference extra large ===========
+////ExtendedCosmosClient: GetAllResources: 22.41 RU, returned 100 items
+////ExtendedCosmosClient:ReadItemAsync: 1.05 RU
+////Result: diff1: 2, diff2: 2
