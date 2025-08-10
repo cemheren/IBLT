@@ -12,7 +12,7 @@ var extraLargePropertyBag = "\r\n{\r\n  \"properties\": {\r\n    \"displayName\"
 DefaultAzureCredential credential = new();
 
 CosmosClient client = new(
-    accountEndpoint: "",
+    accountEndpoint: "https://akifcosmostest.documents.azure.com:443/",
     tokenCredential: new DefaultAzureCredential()
 );
 

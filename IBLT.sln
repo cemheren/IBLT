@@ -11,6 +11,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChecksumCosmosClient", "Che
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestConsoleApp", "TestConsoleApp\TestConsoleApp.csproj", "{D03D004D-CA3B-42BB-9C0D-2C11AAAABDE5}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LiveGraph", "LiveGraph\LiveGraph.csproj", "{7728FD30-FB2B-46A3-9396-668695B9BBBD}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,6 +35,10 @@ Global
 		{D03D004D-CA3B-42BB-9C0D-2C11AAAABDE5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D03D004D-CA3B-42BB-9C0D-2C11AAAABDE5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D03D004D-CA3B-42BB-9C0D-2C11AAAABDE5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7728FD30-FB2B-46A3-9396-668695B9BBBD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7728FD30-FB2B-46A3-9396-668695B9BBBD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7728FD30-FB2B-46A3-9396-668695B9BBBD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7728FD30-FB2B-46A3-9396-668695B9BBBD}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
