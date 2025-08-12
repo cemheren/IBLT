@@ -107,5 +107,36 @@
             return diffList?.Select(item =>
                 new T { id = item.Item1, partitionKey = partitionKey }).ToArray();
         }
+
+        public async Task DeleteItemAsync(string partitionKey, string id)
+        {
+            var readItem = await this.ReadItemAsync(partitionKey, id);
+
+            if (readItem == null)
+            {
+                return;
+            }
+
+            var ibltTask = new Task(async () =>
+            {
+                var dbIBLT = await this.IBLTCosmosClient.ReadItemAsync(partitionKey, partitionKey);
+                var ibltback = MessagePackSerializer.Deserialize<FaultTolerantIBLT>(dbIBLT?.Data);
+
+                if (ibltback == null)
+                {
+                    ibltback = new FaultTolerantIBLT(4, 128);
+                    return;
+                }
+
+                ibltback.DeleteString(id, id); // We should create a smaller footprint IBLT for when the key == value.
+
+                var msgPackSerialized = MessagePackSerializer.Serialize(ibltback);
+                await this.IBLTCosmosClient.UpsertItemAsync(new IBLTRecord(partitionKey, partitionKey, msgPackSerialized));
+            });
+
+            ibltTask.Start();
+
+            await Task.WhenAll(this.cosmosClient.DeleteItemAsync(partitionKey, id), ibltTask);
+        }
     }
 }

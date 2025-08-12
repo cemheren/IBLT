@@ -15,6 +15,8 @@ namespace ChecksumCosmosClient
 
         public Task<T?> ReadItemAsync(string partitionKey, string id);
 
+        public Task DeleteItemAsync(string partitionKey, string id);
+
         public Task<T[]> GetAllResources(string partitionKey);
 
         public Task<T[]?> GetDiff(T[] items, string partitionKey);

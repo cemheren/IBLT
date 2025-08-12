@@ -5,48 +5,6 @@ using Perfolizer.Mathematics.Randomization;
 
 namespace LiveGraph
 {
-    public class Entry : PartitionedRecord
-    {
-        public Entry(Guid uniqueId, string tenant, int slot, JObject payload, byte[] affinitizedSlots)
-        : base(uniqueId.ToString(), tenant + "_" + slot)
-        {
-            this.Data = payload;
-            this.UniqueId = uniqueId;
-            this.AffinitizedSlots = affinitizedSlots;
-            this.slot = slot;
-        }
-
-        public JObject? Data { get; set; }
-
-        public Guid UniqueId { get; set; }
-
-        public byte[] AffinitizedSlots { get; set; }
-
-        public int slot;
-    }
-
-    public class Edge : PartitionedRecord
-    {
-        public Edge(Guid uniqueId, string tenant, int slot, string sourceId, string targetId, byte[] affinitizedSlots)
-        : base(uniqueId.ToString(), tenant + "_" + slot)
-        {
-            this.UniqueId = uniqueId;
-            this.AffinitizedSlots = affinitizedSlots;
-            this.SourceId = sourceId;
-            this.TargetId = targetId;
-            this.slot = slot;
-        }
-
-        public string SourceId { get; set; }
-        
-        public string TargetId { get; set; }
-
-        public int slot;
-
-        public Guid UniqueId { get; set; }
-
-        public byte[] AffinitizedSlots { get; set; }
-    }
 
     public class EntryManagementClient
     {
@@ -61,8 +19,11 @@ namespace LiveGraph
 
         const int totalSlots = 1024;
 
+        // note that reference counting here goes up to 255 connections. 
         private byte[] UpdateByteArray(byte[] original, int[]? add, int[]? remove)
         {
+            original ??= new byte[totalSlots];
+
             for (int i = 0; i < add?.Length; i++)
             {
                 var index = add[i];
@@ -105,12 +66,22 @@ namespace LiveGraph
 
             var edges = new List<Edge>();
 
+            // akif's thoughts: for a well connected entry, we make a maximum of 1024 collection requests, which would saturate the whole cluster
+            // After, we need to remove all the individual edges, this operation can be affinitized to the VM the original request ended up in.
+
             foreach (var slot in entry.AffinitizedSlots)
             {
                 if (slot > 0)
                 {
-                    var edge = this.FindEdges(tenant, slot, uniqueId, null);
+                    var edgesForSlot = await this.FindEdges(tenant, slot, uniqueId, null);
+                    edges.AddRange(edgesForSlot);
                 }
+            }
+
+            foreach (var edge in edges)
+            {
+                edge.AffinitizedSlots = UpdateByteArray(edge.AffinitizedSlots, add: null, remove: [s]);
+                await this.edgeClient.UpsertItemAsync(edge);
             }
         }
 
@@ -127,9 +98,38 @@ namespace LiveGraph
             { 
                 await this.edgeClient.UpsertItemAsync(edge);
 
-                await this.edgeClient.UpsertItemAsync(edge);
-                await this.edgeClient.UpsertItemAsync(edge);
+                await this.cosmosClient.UpsertItemAsync(source);
+                await this.cosmosClient.UpsertItemAsync(target);
             }
+        }
+
+        public async Task DeleteEdge(string type, string uniqueId, string tenant)
+        {
+            var s = this.FindSlot(type);
+
+            var edge = await this.edgeClient.ReadItemAsync(partitionKey: tenant + "_" + s, uniqueId);
+
+            if (edge == null)
+            {
+                return;
+            }
+
+            var sourceEntry = await this.cosmosClient.ReadItemAsync(partitionKey: tenant + "_" + edge.slot, edge.SourceId);
+            var targetEntry = await this.cosmosClient.ReadItemAsync(partitionKey: tenant + "_" + edge.slot, edge.TargetId);
+
+            if (sourceEntry != null)
+            {
+                sourceEntry.AffinitizedSlots = UpdateByteArray(sourceEntry.AffinitizedSlots, add: null, remove: [s]);
+                await this.cosmosClient.UpsertItemAsync(sourceEntry);
+            }
+
+            if (targetEntry != null)
+            {
+                targetEntry.AffinitizedSlots = UpdateByteArray(targetEntry.AffinitizedSlots, add: null, remove: [s]);
+                await this.cosmosClient.UpsertItemAsync(targetEntry);
+            }
+
+            await this.edgeClient.DeleteItemAsync(partitionKey: tenant + "_" + s, uniqueId);
         }
 
         public async Task<Edge[]> FindEdges(string tenantId, int slot, string? sourceId, string? targetId)
@@ -138,10 +138,15 @@ namespace LiveGraph
             var allEdges = await this.edgeClient.GetAllResources(tenantId + "_" + slot);
 
             var filteredEdges = allEdges
-                .Where(e => sourceId != null && e.SourceId == sourceId)
-                .Where(e => targetId != null && e.TargetId == targetId);
+                .Where(e => sourceId != null && e.SourceId == sourceId
+                            || targetId != null && e.TargetId == targetId);
 
             return (Edge[])filteredEdges;
+        }
+
+        public async Task<Entry[]> GraphWalk(Entry start, Entry end)
+        {
+            
         }
     }
 }

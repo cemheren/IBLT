@@ -14,4 +14,6 @@
 /ChecksumCosmosClient/bin/*
 /ChecksumCosmosClient/obj/*
 /IBLT/obj
-/LiveGraph/obj
+/LiveGraph/obj/*
+/LiveGraph/bin/*
+/LiveGraph/LiveGraph.csproj.user

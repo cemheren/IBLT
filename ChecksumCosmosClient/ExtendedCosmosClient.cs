@@ -141,5 +141,27 @@
 
             return allDBItems.Where(i => itemsHash.ContainsKey(i.id) == false).ToArray();
         }
+
+        public async Task DeleteItemAsync(string partitionKey, string id)
+        {
+            var container = this
+                .cosmosClient
+                .GetDatabase(DatabaseResolver.Resolve(partitionKey))
+                .GetContainer(ContainerResolver.Resolve(partitionKey));
+
+            try
+            {
+                var response = await container.DeleteItemAsync<T>(
+                    id: id,
+                    partitionKey: new PartitionKey(partitionKey)
+                );
+
+                Console.WriteLine($"ExtendedCosmosClient:DeleteItemAsync: {response.RequestCharge} RU");
+            }
+            catch (CosmosException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                return;
+            }
+        }
     }
 }
