@@ -150,6 +150,18 @@ namespace LiveGraph
         }
 
 
+        public class ContinuousQuery
+        {
+            public class Node 
+            {
+                public string type { get; set; }
+                public string selector { get; set; }
+            }
+
+            public Node startNode { get; set; }
+
+            public  
+        }
 
     }
 }

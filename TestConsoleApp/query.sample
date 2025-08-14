@@ -1,0 +1,24 @@
+// FOR HEALTH SCENARIO
+START FROM resource
+SELECT key = match(serviceGroupMember.sourceId, "/subscription/{*}/")
+USEINDEX SUBSCRIPTION_TO_HEALTH 
+FILTER index != null
+RETURN resource.id, index.healthId
+
+
+DEFINE INDEX SUBSCRIPTION_TO_HEALTH
+START FROM serviceGroupMember 
+SELECT s = match(serviceGroupMember.sourceId, "/subscription/{*}/"), t = serviceGroupMember.targetId
+USEFUNCTION keys = ANCESTORS t
+USEINDEXFORARRAY HEALTH_RESOURCES
+CREATE key = s, index
+
+
+DEFINE INDEX HEALTH_RESOURCES
+START FROM healthResource
+EXTEND sgid = match(healthResource.id, "{*}/providers/Microsoft.Health*")
+CREATE key = sgid, {healthId : healthResource.id}
+
+
+
+
