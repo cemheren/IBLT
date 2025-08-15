@@ -5,16 +5,17 @@ using LiveGraph.ContinuousQuery;
 namespace antlrOpaTest
 {
     [TestClass]
-    public class RegoTranspileTests
+    public class CQTranspileTests
     {
         [TestMethod]
-        public void ParseRego()
+        public void ParseCQ()
         {
             var rule = @"
-
-                allow {
-                    input.location == ""eastus""
-                }
+                START FROM resource
+                EXTEND key = CSHARP(`match(resource.subscription, ""/subscriptions/{*}/"")`)
+                USEINDEX SUBSCRIPTION_TO_HEALTH 
+                FILTER index != null
+                RETURN resource.id, index.healthId
             ";
 
             var cq = this.GetParsedContinuousQuery(rule);
@@ -22,19 +23,19 @@ namespace antlrOpaTest
             Assert.IsNotNull(cq);
         }
 
-        private RegoProgram? GetParsedContinuousQuery(string rule, string head = "allow")
+        private CQProgram? GetParsedContinuousQuery(string queryText)
         {
-            var antlrStream = new AntlrInputStream(rule);
-            var lexer = new RegoLexer(antlrStream);
+            var antlrStream = new AntlrInputStream(queryText);
+            var lexer = new CQLexer(antlrStream);
 
             var tokenStream = new CommonTokenStream(lexer);
-            var parser = new RegoParser(tokenStream);
+            var parser = new CQParser(tokenStream);
 
-            var rootVisitor = new RootVisitor();
+            var rootVisitor = new ValidatingVisitor();
             var root = parser.root();
-            var regoProgram = root.Accept(rootVisitor);
+            var CQProgram = root.Accept(rootVisitor);
 
-            return regoProgram;
+            return CQProgram;
         }
     }
 }

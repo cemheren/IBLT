@@ -24,7 +24,7 @@
 
 
     <ItemGroup>
-        <Antlr4 Update="RegoParser.g4">
+        <Antlr4 Update="CQParser.g4">
             <DefaultCustomToolNamespace>$([MSBuild]::ValueOrDefault('$(RootNamespace).%(DefaultCustomToolNamespace)', '').TrimEnd('.'))</DefaultCustomToolNamespace>
             <CustomToolNamespace>$([MSBuild]::ValueOrDefault(%(CustomToolNamespace), %(DefaultCustomToolNamespace)))</CustomToolNamespace>
         </Antlr4>
