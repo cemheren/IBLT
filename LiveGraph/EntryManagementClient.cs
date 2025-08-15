@@ -144,24 +144,24 @@ namespace LiveGraph
             return (Edge[])filteredEdges;
         }
 
-        public async Task<Entry[]> GraphWalk(Entry start, Entry end)
-        {
+        //public async Task<Entry[]> GraphWalk(Entry start, Entry end)
+        //{
 
-        }
+        //}
 
 
-        public class ContinuousQuery
-        {
-            public class Node 
-            {
-                public string type { get; set; }
-                public string selector { get; set; }
-            }
+        //public class ContinuousQuery
+        //{
+        //    public class Node 
+        //    {
+        //        public string type { get; set; }
+        //        public string selector { get; set; }
+        //    }
 
-            public Node startNode { get; set; }
+        //    public Node startNode { get; set; }
 
-            public  
-        }
+        //    public  
+        //}
 
     }
 }

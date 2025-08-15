@@ -7,8 +7,27 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Antlr4.CodeGenerator" Version="4.6.6">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Antlr4.Runtime" Version="4.6.6" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+  </ItemGroup>
+
+    
+  <ItemGroup>
     <ProjectReference Include="..\ChecksumCosmosClient\ChecksumCosmosClient.csproj" />
     <ProjectReference Include="..\IBLT\IBLT.csproj" />
   </ItemGroup>
+
+
+
+    <ItemGroup>
+        <Antlr4 Update="RegoParser.g4">
+            <DefaultCustomToolNamespace>$([MSBuild]::ValueOrDefault('$(RootNamespace).%(DefaultCustomToolNamespace)', '').TrimEnd('.'))</DefaultCustomToolNamespace>
+            <CustomToolNamespace>$([MSBuild]::ValueOrDefault(%(CustomToolNamespace), %(DefaultCustomToolNamespace)))</CustomToolNamespace>
+        </Antlr4>
+    </ItemGroup>
 
 </Project>
