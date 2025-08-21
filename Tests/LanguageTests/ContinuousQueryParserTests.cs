@@ -23,6 +23,20 @@ namespace antlrOpaTest
             Assert.IsNotNull(cq);
         }
 
+        [TestMethod]
+        public void UseIndexWithoutKey()
+        {
+            var rule = @"
+                START FROM resource
+                EXTEND somevariable = CSHARP(`match(resource.subscription, ""/subscriptions/{*}/"")`)
+                USEINDEX SUBSCRIPTION_TO_HEALTH 
+                FILTER index != null
+                RETURN resource.id, index.healthId
+            ";
+
+            Assert.ThrowsException<ArgumentException>(() => this.GetParsedContinuousQuery(rule));
+        }
+
         private CQProgram? GetParsedContinuousQuery(string queryText)
         {
             var antlrStream = new AntlrInputStream(queryText);

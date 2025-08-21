@@ -4,14 +4,18 @@ namespace LiveGraph
 {
     public class Edge : PartitionedRecord
     {
-        public Edge(Guid uniqueId, string tenant, int slot, string sourceId, string targetId, byte[] affinitizedSlots)
+        public Edge(Guid uniqueId, string tenant, int slot, string type, string sourceId, string targetId, int sourceAffinity, int targetAffinity)
         : base(uniqueId.ToString(), tenant + "_" + slot)
         {
             this.UniqueId = uniqueId;
-            this.AffinitizedSlots = affinitizedSlots;
+            
+            this.SourceAffinity = sourceAffinity;
+            this.TargetAffinity = targetAffinity;
+
             this.SourceId = sourceId;
             this.TargetId = targetId;
             this.slot = slot;
+            this.type = type;
         }
 
         public string SourceId { get; set; }
@@ -22,6 +26,10 @@ namespace LiveGraph
 
         public Guid UniqueId { get; set; }
 
-        public byte[] AffinitizedSlots { get; set; }
+        public string type { get; set; }
+
+        public int? SourceAffinity { get; set; }
+        
+        public int? TargetAffinity { get; set; }
     }
 }

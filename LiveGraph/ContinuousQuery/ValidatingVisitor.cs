@@ -65,7 +65,7 @@ namespace LiveGraph.ContinuousQuery
         {
             if (this.currentProgram.DataExpressions.Count(expresion => expresion.Variables.Any(v => v.Equals("key", StringComparison.OrdinalIgnoreCase))) < 1)
             {
-                throw new ArgumentException($"Define a variable with name 'key' in order to use it in an index expression like: `{context.GetText()}`");
+                throw new ArgumentException($"Define a variable with name 'key' in order to use it in an index expression like: `{context.IDENTIFIER().ToString()}`");
             }
 
             this.currentProgram.IndexesUsed.Add(context.IDENTIFIER().ToString());
@@ -81,7 +81,7 @@ namespace LiveGraph.ContinuousQuery
 
             if (variable == null)
             {
-                throw new ArgumentNullException($"IDENTIFIER expected for assignment expression `{context.GetText()}`");
+                throw new ArgumentNullException($"IDENTIFIER expected for assignment expression `{context.ToString()}`");
             }
 
             expression.Variables = [variable];

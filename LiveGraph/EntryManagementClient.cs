@@ -2,6 +2,7 @@
 using Microsoft.Identity.Client;
 using Newtonsoft.Json.Linq;
 using Perfolizer.Mathematics.Randomization;
+using System.Xml;
 
 namespace LiveGraph
 {
@@ -48,7 +49,7 @@ namespace LiveGraph
         { 
             var s = this.FindSlot(type);
 
-            var entry = new Entry(Guid.NewGuid(), tenant, s, payload, []);
+            var entry = new Entry(uniqueId: Guid.NewGuid(), tenant: tenant, slot: s, payload: payload, affinitizedSlots: []);
 
             await this.cosmosClient.UpsertItemAsync(entry);
         }
@@ -73,14 +74,22 @@ namespace LiveGraph
             {
                 if (slot > 0)
                 {
-                    var edgesForSlot = await this.FindEdges(tenant, slot, uniqueId, null);
+                    var edgesForSlot = await this.FindEdges(tenant, slot, sourceId: uniqueId, targetId: uniqueId, null);
                     edges.AddRange(edgesForSlot);
                 }
             }
 
             foreach (var edge in edges)
             {
-                edge.AffinitizedSlots = UpdateByteArray(edge.AffinitizedSlots, add: null, remove: [s]);
+                if (uniqueId == edge.SourceId)
+                {
+                    edge.SourceAffinity = null;
+                }
+                else if (uniqueId == edge.TargetId) 
+                {
+                    edge.TargetAffinity = null;
+                }
+
                 await this.edgeClient.UpsertItemAsync(edge);
             }
         }
@@ -89,7 +98,15 @@ namespace LiveGraph
         { 
             var s = this.FindSlot(type);
 
-            var edge = new Edge(Guid.NewGuid(), tenant, s, source.UniqueId.ToString(), target.UniqueId.ToString(), UpdateByteArray([], [source.slot], [target.slot]));
+            var edge = new Edge(
+                uniqueId: Guid.NewGuid(), 
+                tenant: tenant, 
+                slot: s, 
+                type: type, 
+                sourceId: source.UniqueId.ToString(), 
+                targetId: target.UniqueId.ToString(), 
+                sourceAffinity: source.slot,
+                targetAffinity: target.slot);
 
             source.AffinitizedSlots = UpdateByteArray(source.AffinitizedSlots, [s], null);
             target.AffinitizedSlots = UpdateByteArray(target.AffinitizedSlots, [s], null);
@@ -132,7 +149,7 @@ namespace LiveGraph
             await this.edgeClient.DeleteItemAsync(partitionKey: tenant + "_" + s, uniqueId);
         }
 
-        public async Task<Edge[]> FindEdges(string tenantId, int slot, string? sourceId, string? targetId)
+        public async Task<Edge[]> FindEdges(string tenantId, int slot, string? sourceId, string? targetId, string? edgeType)
         {
             // This can be affinitized and cached 
             var allEdges = await this.edgeClient.GetAllResources(tenantId + "_" + slot);
@@ -141,8 +158,44 @@ namespace LiveGraph
                 .Where(e => sourceId != null && e.SourceId == sourceId
                             || targetId != null && e.TargetId == targetId);
 
+            if (edgeType != null)
+            {
+                filteredEdges.Where(edge => edge.type.Equals(edgeType, StringComparison.OrdinalIgnoreCase));
+            }
+
             return (Edge[])filteredEdges;
         }
 
+        public Task<Entry?> GetEntry(string tenant, int slot, string uniqueId)
+        {
+            return this.cosmosClient.ReadItemAsync(partitionKey: Entry.GetPartitionKey(tenant, slot), uniqueId);
+        }
+
+        public async Task<Entry[]> WalkToNeighbors(string tenantId, Entry start, string edgeType)
+        {
+            var edges = new List<Edge>();
+
+            foreach (var slot in start.AffinitizedSlots)
+            {
+                if (slot > 0)
+                {
+                    var edgesForSlot = await this.FindEdges(tenantId, slot, sourceId: start.UniqueId.ToString(), null, edgeType);
+                    edges.AddRange(edgesForSlot);
+                }
+            }
+
+            var entries = new List<Entry>();
+
+            foreach (var edge in edges)
+            {
+                var entry = await this.GetEntry(tenantId, (int)edge.TargetAffinity!, edge.TargetId);
+                if (entry != null)
+                {
+                    entries.Add(entry!);
+                }
+            }
+
+            return entries.ToArray();
+        }
     }
 }
