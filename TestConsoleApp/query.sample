@@ -44,6 +44,19 @@ FILTER index != null                                                // inline fi
 RETURN resource.id, index.healthId                                  // Send notification based on return value, total of at least 4 lookups or out of box calls 
 
 
+START FROM resource
+FILTER resource.type == "virtualMachine"
+FILTER resource.tags.foo == "bar"
+RETURN resource.id, "<fixed sg id>"                                 
+
+START FROM resource
+RETURN resource.id resource.rourceGroup
+
+START FROM resourceGroup
+RETURN resourceGroup.id resourceGroup.sub
+
+
+
 // Examle without an index that doesn't denormalize ancestors: 
 // First create the subscription to SG index, which is just SGMs where source is a subscription, we should assume these exist as built-ins probably
 DEFINE INDEX SUB_TO_SG_LEAF

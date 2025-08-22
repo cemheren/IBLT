@@ -24,11 +24,12 @@ INDEX       : 'INDEX';
 FUNCTION    : 'FUNCTION';
 PARAMS      : 'PARAMS';
 RETURNS     : 'RETURNS';
-USEFUNCTION : 'USEFUNCTION';
 USEINDEXFORARRAY : 'USEINDEXFORARRAY';
 CREATE      : 'CREATE';
 ANCESTORS   : 'ANCESTORS';
 CSHARP      : 'CSHARP';
+WALKTONEIGHBORS : 'WALKTONEIGHBORS';
+ISSUBSCRIPTION : 'ISSUBSCRIPTION';
 
 // Types
 STRING_TYPE : 'string';
@@ -36,10 +37,17 @@ STRING_ARRAY_TYPE : 'string[]';
 
 // Operators
 EQUALS      : '=';
+DOUBLE_EQUALS : '==';
 NOT_EQUALS  : '!=';
 NOT         : 'not';
 AND         : 'and';
 OR          : 'or';
+TRUE        : 'true';
+FALSE       : 'false';
+
+// Relationship operators
+ARROW       : '->';
+COLON       : ':';
 
 // Punctuation
 LPAREN      : '(';
@@ -48,7 +56,6 @@ LBRACE      : '{';
 RBRACE      : '}';
 COMMA       : ',';
 DOT         : '.';
-COLON       : ':';
 SEMICOLON   : ';';
 
 // Literals

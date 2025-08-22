@@ -4,6 +4,8 @@ namespace LiveGraph
 {
     public class Edge : PartitionedRecord
     {
+        public Edge() { }
+
         public Edge(Guid uniqueId, string tenant, int slot, string type, string sourceId, string targetId, int sourceAffinity, int targetAffinity)
         : base(uniqueId.ToString(), tenant + "_" + slot)
         {

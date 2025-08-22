@@ -6,6 +6,8 @@ namespace LiveGraph
 {
     public class Entry : PartitionedRecord
     {
+        public Entry() { }
+
         public Entry(Guid uniqueId, string tenant, int slot, JObject payload, byte[] affinitizedSlots)
         : base(uniqueId.ToString(), GetPartitionKey(tenant, slot))
         {

@@ -19,9 +19,7 @@ statement
 // Query statement
 queryStatement
     : startFromClause
-      (selectClause | extendClause)?
-      useIndexClause?
-      filterClause?
+      clause*
       returnClause
     ;
 
@@ -29,8 +27,7 @@ queryStatement
 indexDefinition
     : DEFINE INDEX IDENTIFIER
       startFromClause
-      (selectClause | extendClause)?
-      (useIndexClause | useIndexForArrayClause)*
+      clause*
       createClause
     ;
 
@@ -41,7 +38,17 @@ functionDefinition
       returnsClause
     ;
 
-// Clauses
+// General clause (can appear in any order)
+clause
+    : selectClause
+    | extendClause
+    | useIndexClause
+    | filterClause
+    | walkToNeighborsClause
+    | useIndexForArrayClause
+    ;
+
+// Specific clauses
 startFromClause
     : START FROM IDENTIFIER
     ;
@@ -64,6 +71,14 @@ filterClause
 
 returnClause
     : RETURN expressionList
+    ;
+
+walkToNeighborsClause
+    : WALKTONEIGHBORS relationshipPattern ARROW IDENTIFIER
+    ;
+
+relationshipPattern
+    : COLON IDENTIFIER
     ;
 
 useIndexForArrayClause
@@ -113,7 +128,8 @@ expression
     ;
 
 binaryOperator
-    : NOT_EQUALS
+    : DOUBLE_EQUALS
+    | NOT_EQUALS
     | EQUALS
     | AND
     | OR
@@ -126,6 +142,7 @@ functionCall
 functionName
     : ANCESTORS
     | CSHARP
+    | ISSUBSCRIPTION
     | IDENTIFIER
     ;
 
@@ -154,4 +171,6 @@ literal
     | BACKTICK_STRING
     | NUMBER
     | NULL
+    | TRUE
+    | FALSE
     ;
