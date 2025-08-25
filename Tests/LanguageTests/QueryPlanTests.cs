@@ -15,6 +15,7 @@ namespace antlrOpaTest
         private Database? database;
         private Container? entryContainer;
         private Container? edgeContainer;
+        private QueryPlanAwareDataAccessor dataAccessor;
         private IIncrementalCosmosClient<Edge> edgeClient;
         private IIncrementalCosmosClient<Entry> EntryClient;
 
@@ -25,6 +26,8 @@ namespace antlrOpaTest
             database = await CosmosTestHelper.CreateDatabaseAsync(client);
             entryContainer = await CosmosTestHelper.CreateContainerAsync(database, CosmosTestHelper.EntryContainerName);
             edgeContainer = await CosmosTestHelper.CreateContainerAsync(database, CosmosTestHelper.EdgeContainerName);
+            dataAccessor = new QueryPlanAwareDataAccessor(new EntyDataProvider(this.EntryClient, this.edgeClient));
+
 
             this.edgeClient = client
                 .WithCosmosClientExtensions<Edge>()
@@ -46,7 +49,7 @@ namespace antlrOpaTest
         }
 
         [TestMethod]
-        public void ParseCQ()
+        public async Task ParseCQ()
         {
             var rule = @"
 START FROM resource
@@ -60,12 +63,12 @@ FILTER index != null                                                // inline fi
 RETURN resource.id, index.healthId                                  // Send notification based on return value, total of at least 4 lookups or out of box calls 
             ";
 
-            var cq = this.GetParsedQueryPlan(rule);
+            var cq = await this.GetParsedQueryPlan(rule);
 
             Assert.IsNotNull(cq);
         }
 
-        private QueryPlan? GetParsedQueryPlan(string queryText)
+        private async Task<FeedForwardQueryEvaluationContext?> GetParsedQueryPlan(string queryText)
         {
             var antlrStream = new AntlrInputStream(queryText);
             var lexer = new CQLexer(antlrStream);
@@ -73,9 +76,11 @@ RETURN resource.id, index.healthId                                  // Send noti
             var tokenStream = new CommonTokenStream(lexer);
             var parser = new CQParser(tokenStream);
 
-            var rootVisitor = new QueryPlanVisitor(new EntryManagementClient(this.EntryClient, this.edgeClient));
+            var dummyContext = new FeedForwardQueryEvaluationContext { TenantId = "testId", CurrentEntries = [new Entry(Guid.NewGuid(), tenant: "testId", slot: 4, null, null)] };
+
+            var rootVisitor = new QueryPlanVisitor(dataAccessor, dummyContext);
             var root = parser.root();
-            var queryPlan = root.Accept(rootVisitor);
+            var queryPlan = await root.Accept(rootVisitor);
 
             return queryPlan;
         }

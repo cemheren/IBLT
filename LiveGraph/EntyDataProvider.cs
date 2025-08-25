@@ -6,13 +6,16 @@ using System.Xml;
 
 namespace LiveGraph
 {
-
-    public class EntryManagementClient
+    /// <summary>
+    /// Wrapper for the edge and entry clients, design cue here is that these methods are not affinitized and meant to run on the same machine the method is coming from. 
+    /// They can return large arrays where necessary. Eventually inmem or garnet caches should integrate with this class. 
+    /// </summary>
+    public class EntyDataProvider
     {
         private IIncrementalCosmosClient<Entry> cosmosClient;
         private readonly IIncrementalCosmosClient<Edge> edgeClient;
 
-        public EntryManagementClient(IIncrementalCosmosClient<Entry> nodeClient, IIncrementalCosmosClient<Edge> edgeClient)
+        public EntyDataProvider(IIncrementalCosmosClient<Entry> nodeClient, IIncrementalCosmosClient<Edge> edgeClient)
         {
             this.cosmosClient = nodeClient;
             this.edgeClient = edgeClient;
@@ -149,6 +152,19 @@ namespace LiveGraph
             await this.edgeClient.DeleteItemAsync(partitionKey: tenant + "_" + s, uniqueId);
         }
 
+        public Task<Entry?> GetEntry(string tenant, int slot, string uniqueId)
+        {
+            return this.cosmosClient.ReadItemAsync(partitionKey: Entry.GetPartitionKey(tenant, slot), uniqueId);
+        }
+
+        internal Task<Edge[]> GetAllEdges(string pk)
+        {
+            return this.edgeClient.GetAllResources(pk);
+        }
+
+        /// <summary>
+        /// This version is not feedforward. Where another version on the qpada should be made feed foreard.
+        /// <returns></returns>
         public async Task<Edge[]> FindEdges(string tenantId, int slot, string? sourceId, string? targetId, string? edgeType)
         {
             // This can be affinitized and cached 
@@ -166,36 +182,5 @@ namespace LiveGraph
             return (Edge[])filteredEdges;
         }
 
-        public Task<Entry?> GetEntry(string tenant, int slot, string uniqueId)
-        {
-            return this.cosmosClient.ReadItemAsync(partitionKey: Entry.GetPartitionKey(tenant, slot), uniqueId);
-        }
-
-        public async Task<Entry[]> WalkToNeighbors(string tenantId, Entry start, string edgeType)
-        {
-            var edges = new List<Edge>();
-
-            foreach (var slot in start.AffinitizedSlots)
-            {
-                if (slot > 0)
-                {
-                    var edgesForSlot = await this.FindEdges(tenantId, slot, sourceId: start.UniqueId.ToString(), null, edgeType);
-                    edges.AddRange(edgesForSlot);
-                }
-            }
-
-            var entries = new List<Entry>();
-
-            foreach (var edge in edges)
-            {
-                var entry = await this.GetEntry(tenantId, (int)edge.TargetAffinity!, edge.TargetId);
-                if (entry != null)
-                {
-                    entries.Add(entry!);
-                }
-            }
-
-            return entries.ToArray();
-        }
     }
 }
